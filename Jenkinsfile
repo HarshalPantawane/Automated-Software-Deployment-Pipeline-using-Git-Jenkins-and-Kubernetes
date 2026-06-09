@@ -2,19 +2,12 @@ pipeline {
     agent any
     environment {
         APP_VERSION = "${env.BUILD_NUMBER}"
-        // K8S_NAMESPACE = credentials('k8s-namespace-id')
+        K8S_NAMESPACE = 'production'
         IMAGE_NAME = "pro-app-img"
         ECR_REGISTRY = credentials('ecr-registry-id')
-        K8S_CREDENTIALS_ID = 'kubeconfig-id'
         AWS_CREDENTIALS_ID = 'AWS_CREDENTIALS_ID'
     }
     stages {
-        /*stage('Checkout') {
-            steps {
-                git branch: 'main', 
-                    url: 'https://github.com/HarshalPantawane/Automated-Software-Deployment-Pipeline-using-Git-Jenkins-and-Kubernetes.git'
-            }
-        }*/
         stage('Maven Build') {
             steps {
                 sh '''
@@ -72,9 +65,21 @@ pipeline {
                 script {
                     echo '--- Deploying using declarative (desired state) approach ---'
 
-                    withKubeConfig(credentialsId: env.K8S_CREDENTIALS_ID) {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: env.AWS_CREDENTIALS_ID,
+                            usernameVariable: 'AWS_ACCESS_KEY_ID',
+                            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                        )
+                    ]) {
                         sh '''
-                        kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
+                        aws eks update-kubeconfig \
+                          --region us-east-1 \
+                          --name my-eks-cluster
+                    
+                        kubectl get nodes
+                    
+                        kubectl create namespace ${K8S_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                         mkdir -p k8s/rendered
                         envsubst < k8s/deployment.yml > k8s/rendered/deployment.yml
                         envsubst < k8s/svc.yml > k8s/rendered/svc.yml
