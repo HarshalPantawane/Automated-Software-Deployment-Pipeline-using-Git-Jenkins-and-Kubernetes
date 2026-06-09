@@ -10,25 +10,25 @@ pipeline {
     stages {
         stage('Maven Build') {
             steps {
-                sh """
+                sh '''
                 echo '--- Building Application ---'
                 mvn -B clean package
                 echo '--- Application Built Successfully ---'
-                """
+                '''
             }
         }
         stage('Maven Test') {
             steps {
-                sh """
+                sh '''
                 echo '--- Executing test cases ---'
                 mvn -B test
                 echo '--- Test cases executed successfully ---'
-                """
+                '''
             }
         }
         stage('Build & Tag Image') {
             steps {
-                sh """
+                sh '''
                 echo '--- Building Docker image ---'
                 docker build -t ${IMAGE_NAME}:${APP_VERSION} .
                 echo '--- Docker image built successfully ---'
@@ -36,13 +36,13 @@ pipeline {
                 echo '---Image Tag---'
                 docker tag ${IMAGE_NAME}:${APP_VERSION} ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                 echo '---Image Taged Successfully---'
-                """
+                '''
             }
         }
         stage('Login And Push Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: env.AWS_CREDENTIALS_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh """
+                    sh '''
                     echo '--- Login to ECR ---'
                     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com
                     echo '--- Login successful ---'
@@ -55,7 +55,7 @@ pipeline {
                     echo '--- Pushing image to ECR ---'
                     docker push ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                     echo '--- Image pushed successfully ---'
-                    """
+                    '''
                 }
             }
         }
