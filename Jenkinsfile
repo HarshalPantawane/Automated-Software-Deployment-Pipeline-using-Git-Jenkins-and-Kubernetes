@@ -84,7 +84,7 @@ pipeline {
                         envsubst < k8s/deployment.yml > k8s/rendered/deployment.yml
                         envsubst < k8s/svc.yml > k8s/rendered/svc.yml
                         kubectl apply -f k8s/rendered/ -n ${K8S_NAMESPACE}
-                        kubectl rollout status deployment/${IMAGE_NAME} -n ${K8S_NAMESPACE} --timeout=120s
+                        kubectl rollout status deployment/pro-app -n ${K8S_NAMESPACE} --timeout=120s
                         '''
                     }
                 }
