@@ -118,8 +118,3 @@ This implementation provides several benefits:
 ## Output
 
 <img width="1920" height="1080" alt="Screenshot (147)" src="https://github.com/user-attachments/assets/4d06e11a-ba49-43ef-9bf4-c788fdf20212" />
-
-## Conclusion
-
-This repository demonstrates a practical approach to automating software deployment using modern DevOps tools. It highlights how Git, Jenkins, Docker, ECR, and Kubernetes can work together to deliver applications in a structured, repeatable, and scalable way.
-
