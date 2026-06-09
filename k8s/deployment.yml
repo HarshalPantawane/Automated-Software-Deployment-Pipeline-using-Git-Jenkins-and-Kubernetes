@@ -17,7 +17,7 @@ spec:
     spec: 
       containers:
         - name: pro-app
-          image: ${ECR_REGISTRY}/${IMAGE_NAME}:${APP_VERSION}
+          image: ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
