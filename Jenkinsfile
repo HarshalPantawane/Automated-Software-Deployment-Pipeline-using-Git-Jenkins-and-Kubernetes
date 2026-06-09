@@ -2,16 +2,17 @@ pipeline {
     agent any
     environment {
         APP_VERSION = "${env.BUILD_NUMBER}"
-        K8S_NAMESPACE = credentials('k8s-namespace-id')
+        // K8S_NAMESPACE = credentials('k8s-namespace-id')
         IMAGE_NAME = "pro-app"
         ECR_REGISTRY = credentials('ecr-registry-id')
         K8S_CREDENTIALS_ID = 'kubeconfig-id'
-        AWS_CREDENTIALS_ID = 'aws-creds'
+        AWS_CREDENTIALS_ID = 'AWS_CREDENTIALS_ID'
     }
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/HarshalPantawane/Automated-Software-Deployment-Pipeline-using-Git-Jenkins-and-Kubernetes.git'
+                git branch: 'main', 
+                    url: 'https://github.com/HarshalPantawane/Automated-Software-Deployment-Pipeline-using-Git-Jenkins-and-Kubernetes.git'
             }
         }
         stage('Maven Build') {
@@ -46,7 +47,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: env.AWS_CREDENTIALS_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh """
                     echo '--- Login to ECR ---'
-                    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com
                     echo '--- Login successful ---'
 
                     echo '--- Pushing image to ECR ---'
