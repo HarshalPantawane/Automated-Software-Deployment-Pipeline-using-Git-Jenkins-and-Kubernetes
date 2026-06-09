@@ -54,8 +54,8 @@ pipeline {
                     echo '--- Login successful ---'
 
                     echo '---Describe and Create ECR Repository---'
-                    aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region us-east-1
-                    aws ecr create-repository --repository-name {IMAGE_NAME} --region us-east-1
+                    aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region us-east-1 >/dev/null 2>&1 ||
+                    aws ecr create-repository --repository-name ${IMAGE_NAME} --region us-east-1
                     echo '---Created Repository Successfully---'
 
                     
