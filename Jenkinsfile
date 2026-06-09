@@ -64,7 +64,7 @@ pipeline {
 
                     withKubeConfig(credentialsId: env.K8S_CREDENTIALS_ID) {
                         sh '''
-                        kubectl create namespace ${K8S_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                        kubectl create namespace production --dry-run=client -o yaml | kubectl apply -f -
                         mkdir -p k8s/rendered
                         envsubst < k8s/deployment.yml > k8s/rendered/deployment.yml
                         envsubst < k8s/svc.yml > k8s/rendered/svc.yml
