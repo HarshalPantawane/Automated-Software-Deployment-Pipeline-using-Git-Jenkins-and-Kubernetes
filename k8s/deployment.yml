@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pro-app
+  labels:
+    app: pro-app
+  namespace: ${K8S_NAMESPACE}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pro-app
+  template: 
+    metadata:
+      labels:
+        app: pro-app
+    spec: 
+      containers:
+        - name: pro-app
+          image: ${ECR_REGISTRY}/${IMAGE_NAME}:${APP_VERSION}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: "500Mi"
+            limits:
+              cpu: 1
+              memory: "1Gi"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 3
+            failureThreshold: 3
+            timeoutSeconds: 4
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8088
+            initialDelaySeconds: 20
+            periodSeconds: 3
+            timeoutSeconds: 4
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8088
+            initialDelaySeconds: 20
+            periodSeconds: 3
+            timeoutSeconds: 4
+            failureThreshold: 3

@@ -1,0 +1,9 @@
+target
+*.log
+*.tmp
+*.swp
+.git
+.gitignore
+README.md
+k8s/rendered
+
