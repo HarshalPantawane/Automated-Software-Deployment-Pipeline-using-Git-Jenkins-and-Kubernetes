@@ -1,17 +1,43 @@
 pipeline {
     agent any
+
+    
     environment {
+        // Dynamic Image Versioning using Jenkins Build Number
         APP_VERSION = "${env.BUILD_NUMBER}"
+
+        // Kubernetes Namespace to deploy the application
         K8S_NAMESPACE = 'production'
-        IMAGE_NAME = "pro-app-img"
+
+        // Application Image Name 
+        IMAGE_NAME = 'pro-app-img'
+
+        // Account ID for ECR registry
         ECR_REGISTRY = credentials('ecr-registry-id')
+
+        // AWs Credential for Image store and Kubernetes deployment
         AWS_CREDENTIALS_ID = 'AWS_CREDENTIALS_ID'
+
+        // AWS Region
+        AWS_REGION = 'us-east-1'
+
+        // Kubernetes Cluster Name
+        K8S_CLUSTER_NAME = 'automation-cluster'
     }
+
     stages {
+        stage('Dynamic Checkout') {
+            steps {
+                echo "--- Processing Repository: ${env.REPO_NAME} | Branch: ${env.GIT_BRANCH} ---"
+                // Pulls down the code for your specific repo/branch that triggered the webhook
+                checkout scm
+            }
+        }
         stage('Maven Build') {
             steps {
+                // Using -B for batch mode to avoide progress bars
                 sh """
-                echo '--- Building Application ---'
+                echo '--- Building Application ---'    
                 mvn -B clean package
                 echo '--- Application Built Successfully ---'
                 """
@@ -34,26 +60,27 @@ pipeline {
                 echo '--- Docker image built successfully ---'
 
                 echo '---Image Tag---'
-                docker tag ${IMAGE_NAME}:${APP_VERSION} ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
+                docker tag ${IMAGE_NAME}:${APP_VERSION} ${ECR_REGISTRY}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                 echo '---Image Taged Successfully---'
                 """
             }
         }
         stage('Login And Push Image') {
             steps {
+                // Using Jenkins Credential to login and push image to ECR
                 withCredentials([usernamePassword(credentialsId: env.AWS_CREDENTIALS_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh """
                     echo '--- Login to ECR ---'
-                    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.${AWS_REGION}.amazonaws.com
                     echo '--- Login successful ---'
 
                     echo '---Describe and Create ECR Repository---'
-                    aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region us-east-1 >/dev/null 2>&1 ||
-                    aws ecr create-repository --repository-name ${IMAGE_NAME} --region us-east-1
+                    aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region ${AWS_REGION} >/dev/null 2>&1 ||
+                    aws ecr create-repository --repository-name ${IMAGE_NAME} --region ${AWS_REGION}
                     echo '---Created Repository Successfully---'
 
                     echo '--- Pushing image to ECR ---'
-                    docker push ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
+                    docker push ${ECR_REGISTRY}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                     echo '--- Image pushed successfully ---'
                     """
                 }
@@ -61,53 +88,59 @@ pipeline {
         }
 
         stage('Deploy To Kubernetes') {
-          steps {
+            steps {
                 script {
-                     echo '--- Deploying to Kubernetes ---'
-                
-                     withCredentials([
-                         usernamePassword(
-                             credentialsId: env.AWS_CREDENTIALS_ID,
-                             usernameVariable: 'AWS_ACCESS_KEY_ID',
-                             passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                          )
+                    echo '--- Deploying to Kubernetes ---'
+                    // Using Jenkins Credential to authenticate with AWS and deploy to EKS cluster
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: env.AWS_CREDENTIALS_ID,
+                            usernameVariable: 'AWS_ACCESS_KEY_ID',
+                            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                        )
                     ]) {
-        
                         sh """
+                        # Ensures script stops immediately on any unexpected sub-command failure
                         set -e
-        
-                        aws eks update-kubeconfig --region us-east-1 --name automation-cluster
-        
+
+                        echo '---Updating kubeconfig for EKS cluster---'
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${K8S_CLUSTER_NAME}
+
                         kubectl get nodes
-        
+ 
+                        # Create this namespace if it doesn't exist, but don't fail if it already does.
                         kubectl create namespace ${K8S_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
-        
+
+                        # Creates isolated workspace folder for final substituted deployment manifests
                         mkdir -p k8s/rendered
-        
+ 
+                        # Exporting core environment tokens to pass smoothly down into envsubst
                         export IMAGE_TAG=${APP_VERSION}
                         export IMAGE_NAME=${IMAGE_NAME}
                         export ECR_REGISTRY=${ECR_REGISTRY}
-        
+                        export K8S_NAMESPACE=${K8S_NAMESPACE}
+
+                        echo '---Rendering Declarative Manifest Tokens---'
                         envsubst < k8s/deployment.yml > k8s/rendered/deployment.yml
                         envsubst < k8s/svc.yml > k8s/rendered/svc.yml
-        
-                        echo "--- Rendered Deployment ---"
+
+                        echo "---Rendered Deployment---"
                         cat k8s/rendered/deployment.yml
-        
+
                         kubectl apply -f k8s/rendered/ -n ${K8S_NAMESPACE}
-        
-                        echo "--- Waiting for rollout ---"
+
+                        echo "---Waiting for rollout---"
                         kubectl rollout status deployment/pro-app -n ${K8S_NAMESPACE} --timeout=180s
-        
-                        echo "--- Rollout finished ---"
+
+                        echo "---Rollout finished---"
                         """
                     }
                 }
             }
         }
-    }   
+    }
+
     post {
-        
         success {
             echo 'Deployment to Kubernetes was successful!'
         }
@@ -115,7 +148,5 @@ pipeline {
         failure {
             echo 'Pipeline failed. Checking for errors...'
         }
-       
     }
-    
 }
