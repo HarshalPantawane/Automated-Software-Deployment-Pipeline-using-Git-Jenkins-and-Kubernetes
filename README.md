@@ -114,7 +114,3 @@ This implementation provides several benefits:
 - faster delivery of application updates
 - a clear example of infrastructure automation
 - easier scaling of deployment practices across environments
-
-## Output
-
-<img width="1920" height="1080" alt="Screenshot (147)" src="https://github.com/user-attachments/assets/4d06e11a-ba49-43ef-9bf4-c788fdf20212" />
