@@ -10,20 +10,20 @@ pipeline {
     stages {
         stage('Maven Build') {
             steps {
-                sh '''
+                sh """
                 echo '--- Building Application ---'
                 mvn -B clean package
                 echo '--- Application Built Successfully ---'
-                '''
+                """
             }
         }
         stage('Maven Test') {
             steps {
-                sh '''
+                sh """
                 echo '--- Executing test cases ---'
                 mvn -B test
                 echo '--- Test cases executed successfully ---'
-                '''
+                """
             }
         }
         stage('Build & Tag Image') {
@@ -35,6 +35,7 @@ pipeline {
 
                 echo '---Image Tag---'
                 docker tag ${IMAGE_NAME}:${APP_VERSION} ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
+                echo '---Image Taged Successfully---'
                 """
             }
         }
@@ -59,44 +60,79 @@ pipeline {
                     """
                 }
             }
-        }
-        stage('Deploy To Kubernetes') {
-            steps {
+    
+     
+       stage('Deploy To Kubernetes') {
+          steps {
                 script {
-                    echo '--- Deploying using declarative (desired state) approach ---'
-
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: env.AWS_CREDENTIALS_ID,
-                            usernameVariable: 'AWS_ACCESS_KEY_ID',
-                            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                        )
+                     echo '--- Deploying to Kubernetes ---'
+                
+                     withCredentials([
+                         usernamePassword(
+                             credentialsId: env.AWS_CREDENTIALS_ID,
+                             usernameVariable: 'AWS_ACCESS_KEY_ID',
+                             passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                          )
                     ]) {
-                        sh '''
-                        aws eks update-kubeconfig \
-                          --region us-east-1 \
-                          --name automation-cluster
-                    
+        
+                        sh """
+                        set -e
+        
+                        aws eks update-kubeconfig --region us-east-1 --name automation-cluster
+        
                         kubectl get nodes
-                    
+        
                         kubectl create namespace ${K8S_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+        
                         mkdir -p k8s/rendered
+        
+                        export IMAGE_TAG=${APP_VERSION}
+                        export IMAGE_NAME=${IMAGE_NAME}
+                        export ECR_REGISTRY=${ECR_REGISTRY}
+        
                         envsubst < k8s/deployment.yml > k8s/rendered/deployment.yml
                         envsubst < k8s/svc.yml > k8s/rendered/svc.yml
+        
+                        echo "--- Rendered Deployment ---"
+                        cat k8s/rendered/deployment.yml
+        
                         kubectl apply -f k8s/rendered/ -n ${K8S_NAMESPACE}
-                        kubectl rollout status deployment/pro-app -n ${K8S_NAMESPACE} --timeout=120s
-                        '''
+        
+                        echo "--- Waiting for rollout ---"
+                        kubectl rollout status deployment/pro-app -n ${K8S_NAMESPACE} --timeout=180s
+        
+                        echo "--- Rollout finished ---"
+                        """
                     }
                 }
             }
         }
-    }
-    post {
-        success {
-            echo '--- Pipeline executed successfully ---'
+       post {
+            success {
+                echo '--- Pipeline SUCCESS ---'
+                echo "Build: ${APP_VERSION}"
+                echo "Image: ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}"
+                echo 'Deployment completed successfully in Kubernetes'
+            }
+        
+            failure {
+                echo '--- Pipeline FAILED ---'
+                echo "Build: ${APP_VERSION}"
+                echo 'Check logs in Build, Docker, or Kubernetes Deploy stage'
+        
+                sh '''
+                echo "---- Kubernetes Pod Status ----"
+                kubectl get pods -n production || true
+        
+                echo "---- Deployment Status ----"
+                kubectl get deployment -n production || true
+                '''
+            }
+        
+            always {
+                echo '--- Pipeline execution finished (SUCCESS or FAILURE) ---'
+                cleanWs()
+            }
         }
-        failure {
-            echo '--- Pipeline failed ---'
-        }
-    }
+    
 }
