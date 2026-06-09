@@ -52,17 +52,15 @@ pipeline {
                     aws ecr create-repository --repository-name ${IMAGE_NAME} --region us-east-1
                     echo '---Created Repository Successfully---'
 
-                    
-
                     echo '--- Pushing image to ECR ---'
                     docker push ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                     echo '--- Image pushed successfully ---'
                     """
                 }
             }
-    
-     
-       stage('Deploy To Kubernetes') {
+        }
+
+        stage('Deploy To Kubernetes') {
           steps {
                 script {
                      echo '--- Deploying to Kubernetes ---'
