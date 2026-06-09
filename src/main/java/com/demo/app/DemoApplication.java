@@ -14,6 +14,6 @@ public class DemoApplication {
 
     @GetMapping("/")
     public String home() {
-        return "CI/CD Demo App - Version 2.0";
+        return "CI/CD Demo App - Version 5.0";
     }
 }
