@@ -109,17 +109,13 @@ pipeline {
     post {
         
         success {
-            echo "SUCCESS: Deployment completed"
+            echo 'Deployment to Kubernetes was successful!'
         }
 
         failure {
-            echo "FAILED: Check logs"
+            echo 'Pipeline failed. Checking for errors...'
         }
-
-        always {
-            sh 'kubectl get pods -n production'
-        }
-
+       
     }
     
 }
