@@ -107,31 +107,19 @@ pipeline {
         }
     }   
     post {
+        
         success {
-            echo '--- Pipeline SUCCESS ---'
-            echo "Build: ${APP_VERSION}"
-            echo "Image: ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}"
-            echo 'Deployment completed successfully in Kubernetes'
+            echo "SUCCESS: Deployment completed"
         }
-    
+
         failure {
-            echo '--- Pipeline FAILED ---'
-            echo "Build: ${APP_VERSION}"
-            echo 'Check logs in Build, Docker, or Kubernetes Deploy stage'
-    
-            sh '''
-            echo "---- Kubernetes Pod Status ----"
-            kubectl get pods -n production || true
-    
-            echo "---- Deployment Status ----"
-            kubectl get deployment -n production || true
-            '''
+            echo "FAILED: Check logs"
         }
-    
+
         always {
-            echo '--- Pipeline execution finished (SUCCESS or FAILURE) ---'
-            cleanWs()
+            sh 'kubectl get pods -n production'
         }
+
     }
     
 }
