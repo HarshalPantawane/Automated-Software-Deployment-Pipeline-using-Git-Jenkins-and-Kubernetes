@@ -1,4 +1,4 @@
-# Continuous Integration/Continuous Deployment (CI/CD) pipeline on Kubernetes.
+# ZeroTouch Deploy
 
 ## Overview
 
