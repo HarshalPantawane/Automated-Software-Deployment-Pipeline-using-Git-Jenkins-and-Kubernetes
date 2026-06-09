@@ -3,18 +3,18 @@ pipeline {
     environment {
         APP_VERSION = "${env.BUILD_NUMBER}"
         // K8S_NAMESPACE = credentials('k8s-namespace-id')
-        IMAGE_NAME = "pro-app"
+        IMAGE_NAME = "pro-app-img"
         ECR_REGISTRY = credentials('ecr-registry-id')
         K8S_CREDENTIALS_ID = 'kubeconfig-id'
         AWS_CREDENTIALS_ID = 'AWS_CREDENTIALS_ID'
     }
     stages {
-        stage('Checkout') {
+        /*stage('Checkout') {
             steps {
                 git branch: 'main', 
                     url: 'https://github.com/HarshalPantawane/Automated-Software-Deployment-Pipeline-using-Git-Jenkins-and-Kubernetes.git'
             }
-        }
+        }*/
         stage('Maven Build') {
             steps {
                 sh '''
@@ -37,7 +37,7 @@ pipeline {
             steps {
                 sh """
                 echo '--- Building Docker image ---'
-                docker build -t ${ECR_REGISTRY}/${IMAGE_NAME}:${APP_VERSION} .
+                docker build -t ${IMAGE_NAME}:${APP_VERSION} .
                 echo '--- Docker image built successfully ---'
                 """
             }
