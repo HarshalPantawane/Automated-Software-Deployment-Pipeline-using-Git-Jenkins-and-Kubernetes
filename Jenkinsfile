@@ -53,9 +53,12 @@ pipeline {
                     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com
                     echo '--- Login successful ---'
 
-                    echo '---Create ECR Repository---'
+                    echo '---Describe and Create ECR Repository---'
                     aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region us-east-1
+                    aws ecr create-repository --repository-name {IMAGE_NAME} --region us-east-1
                     echo '---Created Repository Successfully---'
+
+                    
 
                     echo '--- Pushing image to ECR ---'
                     docker push ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
