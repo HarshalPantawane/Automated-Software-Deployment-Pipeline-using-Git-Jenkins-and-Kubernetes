@@ -117,6 +117,7 @@ This implementation provides several benefits:
 
 ## Output
 
+<img width="1920" height="1080" alt="Screenshot (147)" src="https://github.com/user-attachments/assets/4d06e11a-ba49-43ef-9bf4-c788fdf20212" />
 
 ## Conclusion
 
