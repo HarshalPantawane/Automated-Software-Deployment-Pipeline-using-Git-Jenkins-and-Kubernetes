@@ -39,6 +39,9 @@ pipeline {
                 echo '--- Building Docker image ---'
                 docker build -t ${IMAGE_NAME}:${APP_VERSION} .
                 echo '--- Docker image built successfully ---'
+
+                echo '---Image Tag---'
+                docker tag ${IMAGE_NAME}:${APP_VERSION} ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                 """
             }
         }
@@ -50,8 +53,12 @@ pipeline {
                     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com
                     echo '--- Login successful ---'
 
+                    echo '---Create ECR Repository---'
+                    aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region us-east-1
+                    echo '---Created Repository Successfully---'
+
                     echo '--- Pushing image to ECR ---'
-                    docker push ${ECR_REGISTRY}/${IMAGE_NAME}:${APP_VERSION}
+                    docker push ${ECR_REGISTRY}.dkr.ecr.us-east-1.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
                     echo '--- Image pushed successfully ---'
                     """
                 }
