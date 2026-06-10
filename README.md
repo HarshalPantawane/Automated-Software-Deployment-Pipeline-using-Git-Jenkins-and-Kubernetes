@@ -61,12 +61,12 @@ Developer -> Git Repository -> Jenkins Pipeline -> Docker Build -> Amazon ECR ->
 ```
 
 ## Tech Stack
-Git & GitHub
-Jenkins (CI/CD Orchestration)
-Maven (Build Tool)
-Docker (Containerization)
-Amazon ECR (Image Registry)
-Kubernetes (AWS EKS)
+- Git & GitHub
+- Jenkins (CI/CD Orchestration)
+- Maven (Build Tool)
+- Docker (Containerization)
+- Amazon ECR (Image Registry)
+- Kubernetes (AWS EKS)
 
 ## Prerequisites
 
@@ -127,3 +127,6 @@ This implementation provides several benefits:
 - faster delivery of application updates
 - a clear example of infrastructure automation
 - easier scaling of deployment practices across environments
+
+## Summary
+This project demonstrates a complete CI/CD automation pipeline using Jenkins and Kubernetes, following industry DevOps practices for continuous delivery, scalability, and reliability.
