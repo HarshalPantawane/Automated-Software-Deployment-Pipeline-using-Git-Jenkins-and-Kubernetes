@@ -1,20 +1,18 @@
-# ZeroTouch Deploy
+# ZeroTouch Deploy– CI/CD Pipeline (Git + Jenkins + Kubernetes)
 
 ## Overview
 
 This project presents a complete implementation of an automated software deployment pipeline using Git, Jenkins and Kubernetes. It is designed to demonstrate how an application can be built, containerized, stored in a registry, and deployed to an AWS EKS cluster through a continuous integration and continuous deployment workflow.
 
-The repository serves as a practical reference for teams who want to understand how modern delivery pipelines are structured and how automation can reduce manual deployment effort.
-
 ## Purpose
 
 The main purpose of this project is to automate the lifecycle of a application from source code to a running Kubernetes deployment. The implementation focuses on:
 
-- source code versioning with Git
-- automated build and test execution with Maven
-- container image creation with Docker
-- secure image publication to Amazon ECR
-- deployment orchestration using Kubernetes
+- Source code versioning (Git)
+- Build and test (Maven)
+- Containerization (Docker)
+- Image storage (Amazon ECR)
+- Deployment (Kubernetes on AWS EKS)
 
 ## Implementation Summary
 
@@ -62,6 +60,14 @@ Developer -> Git Repository -> Jenkins Pipeline -> Docker Build -> Amazon ECR ->
 
 ```
 
+## Tech Stack
+Git & GitHub
+Jenkins (CI/CD Orchestration)
+Maven (Build Tool)
+Docker (Containerization)
+Amazon ECR (Image Registry)
+Kubernetes (AWS EKS)
+
 ## Prerequisites
 
 To use and extend this project, the following components are required:
@@ -84,7 +90,7 @@ Recommended credentials include:
 - ecr-registry-id for the ECR endpoint
 - k8s-namespace-id for the target namespace
 
-## Deployment Workflow
+## CI/CD Deployment Workflow
 
 The deployment workflow is executed in stages:
 
@@ -104,6 +110,13 @@ The image is tagged and pushed to Amazon ECR for centralized storage.
 
 ### 5. Kubernetes Deployment
 The deployment manifests are rendered with environment variables and applied to the AWS EKS namespace.
+
+## Security Best Practices
+- No hardcoded credentials in code
+- Jenkins Credentials Manager used for all secrets
+- IAM roles follow least privilege access
+- Separate AWS permissions for ECR and EKS
+- Docker images tagged using build numbers for traceability
 
 ## Benefits of the Implementation
 
