@@ -69,20 +69,10 @@ pipeline {
             steps {
                 // Using Jenkins Credential to login and push image to ECR
                 withCredentials([usernamePassword(credentialsId: env.AWS_CREDENTIALS_ID, usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh """
-                    echo '--- Login to ECR ---'
-                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                    echo '--- Login successful ---'
-
-                    echo '---Describe and Create ECR Repository---'
-                    aws ecr describe-repositories --repository-name ${IMAGE_NAME} --region ${AWS_REGION} >/dev/null 2>&1 ||
-                    aws ecr create-repository --repository-name ${IMAGE_NAME} --region ${AWS_REGION}
-                    echo '---Created Repository Successfully---'
-
-                    echo '--- Pushing image to ECR ---'
-                    docker push ${ECR_REGISTRY}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}:${APP_VERSION}
-                    echo '--- Image pushed successfully ---'
-                    """
+                  sh '''
+                  chmod +x push.sh  
+                  ./push.sh
+                  '''
                 }
             }
         }
@@ -99,8 +89,10 @@ pipeline {
                             passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                         )
                     ]) {
+                        sh '''
                        chmod +x deploy.sh
-                       sh './deploy.sh'
+                       ./deploy.sh
+                       '''
                     }
                 }
             }
