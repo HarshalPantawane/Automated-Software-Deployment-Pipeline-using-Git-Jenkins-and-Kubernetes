@@ -1,4 +1,4 @@
-# ZeroTouch Deploy– CI/CD Pipeline (Git + Jenkins + Kubernetes)
+# Zero Touch Deploy – Automated Deployment Pipeline
 
 ## Overview
 
